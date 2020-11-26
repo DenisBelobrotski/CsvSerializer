@@ -239,7 +239,13 @@ namespace CsvSerialization
             StringBuilder sbColumns = new StringBuilder();
             StringBuilder sbRows = new StringBuilder();
 
-            KeyValuePair<PropertyInfo, DataMemberAttribute>[] pairs = typeof(TEntity).GetElementsResult().ToArray();
+            KeyValuePair<PropertyInfo, DataMemberAttribute>[] pairs = 
+                typeof(TEntity)
+                    .GetProperties()
+                    .Select(x => 
+                                new KeyValuePair<PropertyInfo, DataMemberAttribute>(
+                                    x, (DataMemberAttribute)x.GetCustomAttribute(typeof(DataMemberAttribute))))
+                    .ToArray();
 
             this.MountCsvColumns(ref sbColumns, pairs);
 

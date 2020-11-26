@@ -109,3 +109,13 @@ List<ExampleModel> listCollection = CsvSerializer<ExampleModel>.Deserialize(';',
 ## License
 
 [View MIT license](https://github.com/antonio-leonardo/CsvSerializer/blob/master/LICENSE)
+
+## Main Project
+
+[View Link](https://github.com/antonio-leonardo/CsvSerializer)
+
+## Fork Info
+
+This fork originates to this [issue](https://github.com/antonio-leonardo/CsvSerializer/issues/1).
+
+[Fork Link](https://github.com/DenisBelobrotski/CsvSerializer)
