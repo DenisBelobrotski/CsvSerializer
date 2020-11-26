@@ -4,7 +4,9 @@ using System.Linq;
 using System.Data;
 using System.Reflection;
 using System.Collections.Generic;
+using System.IO;
 using System.Runtime.Serialization;
+using System.Text.RegularExpressions;
 
 namespace CsvSerialization
 {
@@ -199,13 +201,26 @@ namespace CsvSerialization
     public sealed partial class CsvSerializer<TEntity> : CsvSerializerAbstraction<TEntity>
         where TEntity : class
     {
+        //TODO: move it to config
+        const bool ThrowOnError = false;
+        const bool ConsoleLogOnError = true;
+        
+        readonly Regex Regex;
+
+        //TODO: split code to different sources
         /// <summary>
         /// 
         /// </summary>
         private CsvSerializer(char csvSeparator) : base(csvSeparator)
         {
+            char d = csvSeparator;
+            
+            // https://stackoverflow.com/questions/18144431/regex-to-split-a-csv
+            // "(?:^|,)(?=[^\"]|(\")?)\"?((?(1)[^\"]*|[^,\"]*))\"?(?=,|$)"
+            Regex = new Regex($"(?:^|{d})(?=[^\"]|(\")?)\"?((?(1)[^\"]*|[^{d}\"]*))\"?(?={d}|$)");
         }
 
+        //TODO: fix serialization with quotes and commas, like "Downtown (feat. Melle Mel, Grandmaster Caz, Kool Moe Dee & Eric Nally)"
         #region ' Serialize '
 
         /// <summary>
@@ -370,6 +385,9 @@ namespace CsvSerialization
             return (new CsvSerializer<TEntity>(csvSeparator)).CustomDeserialize(csvString);
         }
 
+        //TODO: deserialize single entity
+        //TODO: deserialize from file (StreamReader)
+
         /// <summary>
         /// Overriden method to implements analisys throwing all generic type properties
         /// </summary>
@@ -378,35 +396,107 @@ namespace CsvSerialization
         /// <returns>Collection of Generic</returns>
         protected override IEnumerable<TEntity> CustomDeserialize(string csvString)
         {
-            string[] arrayLinesCsv = csvString.Split('\n');
-            string[] columnsName = arrayLinesCsv[0].Split(base._csvSeparator);
-            Type tp = typeof(TEntity);
-            PropertyInfo[] props = tp.GetProperties();
-            for (int i = 1; i < arrayLinesCsv.Length - 1; i++)
+            using (StringReader reader = new StringReader(csvString))
             {
-                object instance = Activator.CreateInstance(tp);
-                string[] columnsValue = arrayLinesCsv[i].Split(base._csvSeparator);
-                for (int j = 0; j < columnsValue.Length - 1; j++)
+                string header = ReadHeader(reader);
+                IEnumerable<string> bodyLines = ReadBody(reader);
+                string[] columnNames = ReadLine(header).ToArray();
+
+                Type type = typeof(TEntity);
+                PropertyInfo[] props = type.GetProperties();
+
+                int lineIndex = 0;
+                
+                foreach (string line in bodyLines)
                 {
-                    PropertyInfo prop = null;
-                    for (int x = 0; x < props.Length; x++)
+                    string[] values = ReadLine(line).ToArray();
+
+                    if (values.Length != columnNames.Length)
                     {
-                        DataMemberAttribute att = props[x].GetCustomAttribute(typeof(DataMemberAttribute)) as DataMemberAttribute;
-                        if ((null != att && att.Name == columnsName[j]) || columnsName[j] == props[x].Name)
+                        string errorMessage = $"Values count != columns count (body line: {lineIndex}).";
+
+                        if (ThrowOnError)
                         {
-                            prop = props[x];
+                            throw new DataException(errorMessage);
                         }
-                        if (null != prop)
+
+                        if (ConsoleLogOnError)
                         {
-                            prop.SetValue(instance, Convert.ChangeType(columnsValue[j], Type.GetTypeCode(prop.PropertyType)), null);
+                            Console.WriteLine(errorMessage);
+                            Console.WriteLine("Line skipped...");
+                        }
+                        
+                        continue;
+                    }
+
+                    object instance = Activator.CreateInstance(type);
+                
+                    for (int j = 0; j < values.Length; j++)
+                    {
+                        PropertyInfo prop = null;
+                        
+                        for (int x = 0; x < props.Length; x++)
+                        {
+                            DataMemberAttribute att = 
+                                props[x].GetCustomAttribute(typeof(DataMemberAttribute)) as DataMemberAttribute;
+                            
+                            // TODO: check order
+                            if ((null != att && att.Name == columnNames[j]) || columnNames[j] == props[x].Name)
+                            {
+                                prop = props[x];
+                            }
+                            
+                            if (null != prop)
+                            {
+                                prop.SetValue(instance, 
+                                              Convert.ChangeType(values[j], Type.GetTypeCode(prop.PropertyType)), 
+                                              null);
+                            }
                         }
                     }
+                    
+                    lineIndex++;
+                
+                    yield return instance as TEntity;
                 }
-                yield return (instance as TEntity);
+            }
+        }
+
+
+        string ReadHeader(TextReader textReader)
+        {
+            return textReader.ReadLine();
+        }
+
+
+        IEnumerable<string> ReadBody(TextReader textReader)
+        {
+            string line;
+
+            while ((line = textReader.ReadLine()) != null)
+            {
+                yield return line;
+            }
+        }
+
+        
+        IEnumerable<string> ReadLine(string line)
+        {
+            Match match = Regex.Match(line);
+
+            int i = 0;
+
+            while (match.Success)
+            {
+                i++;
+                string value = match.Groups[2].Value;
+
+                yield return value;
+                    
+                match = match.NextMatch();
             }
         }
 
         #endregion
-
     }
 }
