@@ -106,6 +106,22 @@ ExampleModel[] arrayCollection = CsvSerializer<ExampleModel>.Deserialize(';', cs
 List<ExampleModel> listCollection = CsvSerializer<ExampleModel>.Deserialize(';', csvToDeserialize).ToList();
 ```
 ----------------------
+## Installing
+
+You can start using this project with next steps:
+
+1. Clone as [git submodule](https://git-scm.com/book/en/v2/Git-Tools-Submodules).
+
+2. Just [add](https://docs.microsoft.com/en-us/visualstudio/ide/managing-references-in-a-project) following references:
+    1. ```System.Data```
+    2. ```System.Data.DataSetExtensions```
+    3. ```System.Data.Entity```
+    4. ```System.Data.Linq```
+    5. ```System.Runtime.Serialization```
+
+3. Have fun!
+---
+
 ## License
 
 [View MIT license](https://github.com/antonio-leonardo/CsvSerializer/blob/master/LICENSE)
