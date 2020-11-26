@@ -484,11 +484,8 @@ namespace CsvSerialization
         {
             Match match = Regex.Match(line);
 
-            int i = 0;
-
             while (match.Success)
             {
-                i++;
                 string value = match.Groups[2].Value;
 
                 yield return value;
