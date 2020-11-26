@@ -130,8 +130,27 @@ You can start using this project with next steps:
 
 [View Link](https://github.com/antonio-leonardo/CsvSerializer)
 
+## Project Link
+
+[Link](https://github.com/DenisBelobrotski/CsvSerializer)
+
+---
 ## Fork Info
 
-This fork originates to this [issue](https://github.com/antonio-leonardo/CsvSerializer/issues/1).
+Differences with main repository:
+1. This [issue](https://github.com/antonio-leonardo/CsvSerializer/issues/1) fixed.
+2. Quotes supporting added (with this [regular expression](https://stackoverflow.com/questions/18144431/regex-to-split-a-csv)). This example isn't parsing correctly in main repository:
+```
+"1","Hey, Soul Sister","Train","neo mellow",2010,97,89,67,-4,8,80
+```
+3. Fixed skipped last element in row.
+4. Content reading optimized a little bit.
 
-[Fork Link](https://github.com/DenisBelobrotski/CsvSerializer)
+Nearest plans:
+1. Compare order of DataMember attribute to optimize attribute searching.
+
+Known issues:
+1. The following line isn't parsing correctly with current regular expression because of double quotes:
+```
+"203","Ooh La La (from ""The Smurfs 2"")","Britney Spears","dance pop",2013,128,57,69
+```
