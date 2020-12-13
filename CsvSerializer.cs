@@ -448,9 +448,10 @@ namespace CsvSerialization
                             
                             if (null != prop)
                             {
-                                prop.SetValue(instance, 
-                                              Convert.ChangeType(values[j], Type.GetTypeCode(prop.PropertyType)), 
-                                              null);
+                                object value = Convert.ChangeType(values[j], 
+                                                                  Type.GetTypeCode(prop.PropertyType), 
+                                                                  CultureInfo.InvariantCulture);
+                                prop.SetValue(instance, value, null);
                             }
                         }
                     }
